@@ -108,10 +108,10 @@ class ConversationReplyMailer < ApplicationMailer
   def from_email_with_name
     if should_use_conversation_email_address?
       I18n.t('conversations.reply.email.header.from_with_name', assignee_name: assignee_name, inbox_name: @inbox.name,
-                                                                from_email: parse_email(@account.support_email))
+                                                                from_email: parse_email(inbox_from_email_address))
     else
       I18n.t('conversations.reply.email.header.from_with_name', assignee_name: assignee_name, inbox_name: @inbox.name,
-                                                                from_email: parse_email(inbox_from_email_address))
+                                                                from_email: parse_email(@account.support_email))
     end
   end
 
