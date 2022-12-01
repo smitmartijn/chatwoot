@@ -89,6 +89,7 @@ class Api::V1::Accounts::ContactsController < Api::V1::Accounts::BaseController
       @contact.save!
       @contact_inbox = build_contact_inbox
       process_avatar_from_url
+      @contact_inbox.save!
     end
   end
 
@@ -145,11 +146,10 @@ class Api::V1::Accounts::ContactsController < Api::V1::Accounts::BaseController
     return if params[:inbox_id].blank?
 
     inbox = Current.account.inboxes.find(params[:inbox_id])
-    ContactInboxBuilder.new(
-      contact: @contact,
-      inbox: inbox,
-      source_id: params[:source_id]
-    ).perform
+
+    source_id = params[:email] if params[:email]
+    source_id = params[:source_id] || SecureRandom.uuid if params[:email].blank?
+    ContactInbox.create(contact: @contact, inbox: inbox, source_id: source_id)
   end
 
   def permitted_params
