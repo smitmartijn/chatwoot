@@ -105,9 +105,11 @@ class Messages::MessageBuilder
   end
 
   def message_type
-    if @conversation.inbox.channel_type != 'Channel::Api' && @message_type == 'incoming'
-      raise StandardError, 'Incoming messages are only allowed in Api inboxes'
-    end
+    # this is ridiculous, not being able to generate messages using the API for regular channels?!
+    # with this uncommented, it disallows form generated messages.
+    # if @conversation.inbox.channel_type != 'Channel::Api' && @message_type == 'incoming'
+    #   raise StandardError, 'Incoming messages are only allowed in Api inboxes'
+    # end
 
     @message_type
   end
