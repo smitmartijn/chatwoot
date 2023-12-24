@@ -104,7 +104,7 @@ class ConversationReplyMailer < ApplicationMailer
   end
 
   def from_email
-    should_use_conversation_email_address? ? parse_email(@account.support_email) : parse_email(inbox_from_email_address)
+    parse_email(inbox_from_email_address)
   end
 
   def mail_subject
