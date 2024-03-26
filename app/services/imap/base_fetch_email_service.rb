@@ -137,9 +137,8 @@ class Imap::BaseFetchEmailService
   end
 
   def build_imap_client
-    imap = Net::IMAP.new(channel.imap_address, port: channel.imap_port, ssl: channel.imap_enable_ssl)
+    imap = Net::IMAP.new(channel.imap_address, port: channel.imap_port, ssl: { :verify_mode => OpenSSL::SSL::VERIFY_NONE })
     Imap::Authentication.authenticate!(imap, authentication_type, channel.imap_login, imap_password)
-
     imap.select('INBOX')
     Rails.logger.info "[IMAP::FETCH_EMAIL_SERVICE] IMAP connection established for #{channel.email}"
     imap
