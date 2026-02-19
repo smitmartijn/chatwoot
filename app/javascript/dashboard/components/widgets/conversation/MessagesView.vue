@@ -48,6 +48,7 @@ export default {
   setup() {
     const isPopOutReplyBox = ref(false);
     const conversationPanelRef = ref(null);
+    const replyEditorHeight = ref(null);
 
     const keyboardEvents = {
       Escape: {
@@ -67,8 +68,42 @@ export default {
 
     provide('contextMenuElementTarget', conversationPanelRef);
 
+    const startResize = event => {
+      const editorEl = document.querySelector('.ProseMirror-woot-style');
+      const startY = event.clientY;
+      const startHeight =
+        replyEditorHeight.value || editorEl?.offsetHeight || 120;
+
+      const onMouseMove = e => {
+        const delta = startY - e.clientY;
+        replyEditorHeight.value = Math.max(
+          120,
+          Math.min(startHeight + delta, window.innerHeight * 0.6)
+        );
+      };
+
+      const onMouseUp = () => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      };
+
+      document.body.style.cursor = 'row-resize';
+      document.body.style.userSelect = 'none';
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    };
+
+    const resetEditorHeight = () => {
+      replyEditorHeight.value = null;
+    };
+
     return {
       isPopOutReplyBox,
+      replyEditorHeight,
+      startResize,
+      resetEditorHeight,
       captainTasksEnabled,
       getLabelSuggestions,
       isLabelSuggestionFeatureEnabled,
@@ -442,7 +477,15 @@ export default {
 </script>
 
 <template>
-  <div class="flex flex-col justify-between flex-grow h-full min-w-0 m-0">
+  <div
+    class="flex flex-col justify-between flex-grow h-full min-w-0 m-0"
+    :class="{ 'has-resized-editor': replyEditorHeight && !isPopOutReplyBox }"
+    :style="
+      replyEditorHeight && !isPopOutReplyBox
+        ? { '--reply-editor-height': replyEditorHeight + 'px' }
+        : undefined
+    "
+  >
     <Banner
       v-if="!currentChat.can_reply"
       color-scheme="alert"
@@ -520,6 +563,14 @@ export default {
           />
         </div>
       </div>
+      <div
+        v-if="!isPopOutReplyBox"
+        class="flex items-center justify-center h-2 cursor-row-resize shrink-0"
+        @mousedown.prevent="startResize"
+        @dblclick="resetEditorHeight"
+      >
+        <div class="w-8 h-0.5 rounded-full bg-n-slate-3" />
+      </div>
       <ReplyBox
         :pop-out-reply-box="isPopOutReplyBox"
         @update:pop-out-reply-box="isPopOutReplyBox = $event"
@@ -555,6 +606,15 @@ export default {
 
     .emoji-dialog {
       @apply absolute ltr:left-auto rtl:right-auto bottom-1;
+    }
+  }
+}
+
+.has-resized-editor {
+  &::v-deep {
+    .ProseMirror-woot-style {
+      max-height: var(--reply-editor-height) !important;
+      min-height: var(--reply-editor-height) !important;
     }
   }
 }
