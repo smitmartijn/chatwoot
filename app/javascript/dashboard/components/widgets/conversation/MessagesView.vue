@@ -56,11 +56,17 @@ export default {
   mixins: [inboxMixin],
   setup() {
     const conversationPanelRef = ref(null);
-    const resizableEditorWrapperRef = ref(null);
-    const messagesViewRef = useTemplateRef('messagesViewRef');
-    const topBannerRef = useTemplateRef('topBannerRef');
-    const { height: containerHeight } = useElementSize(messagesViewRef);
-    const { height: topBannerHeight } = useElementSize(topBannerRef);
+    const replyEditorHeight = ref(null);
+
+    const keyboardEvents = {
+      Escape: {
+        action: () => {
+          isPopOutReplyBox.value = false;
+        },
+      },
+    };
+
+    useKeyboardEvents(keyboardEvents);
 
     const {
       captainTasksEnabled,
@@ -73,7 +79,42 @@ export default {
 
     provide('contextMenuElementTarget', conversationPanelRef);
 
+    const startResize = event => {
+      const editorEl = document.querySelector('.ProseMirror-woot-style');
+      const startY = event.clientY;
+      const startHeight =
+        replyEditorHeight.value || editorEl?.offsetHeight || 120;
+
+      const onMouseMove = e => {
+        const delta = startY - e.clientY;
+        replyEditorHeight.value = Math.max(
+          120,
+          Math.min(startHeight + delta, window.innerHeight * 0.6)
+        );
+      };
+
+      const onMouseUp = () => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      };
+
+      document.body.style.cursor = 'row-resize';
+      document.body.style.userSelect = 'none';
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    };
+
+    const resetEditorHeight = () => {
+      replyEditorHeight.value = null;
+    };
+
     return {
+      isPopOutReplyBox,
+      replyEditorHeight,
+      startResize,
+      resetEditorHeight,
       captainTasksEnabled,
       getLabelSuggestions,
       isLabelSuggestionFeatureEnabled,
@@ -472,10 +513,15 @@ export default {
 
 <template>
   <div
-    ref="messagesViewRef"
     class="flex flex-col justify-between flex-grow h-full min-w-0 m-0"
+    :class="{ 'has-resized-editor': replyEditorHeight && !isPopOutReplyBox }"
+    :style="
+      replyEditorHeight && !isPopOutReplyBox
+        ? { '--reply-editor-height': replyEditorHeight + 'px' }
+        : undefined
+    "
   >
-    <div ref="topBannerRef">
+    <div>
       <Banner
         v-if="isInstagramRestrictionBannerVisible"
         color-scheme="warning"
@@ -569,12 +615,59 @@ export default {
           />
         </div>
       </div>
-      <ResizableEditorWrapper
-        ref="resizableEditorWrapperRef"
-        :container-height="Math.max(0, containerHeight - topBannerHeight)"
+      <div
+        v-if="!isPopOutReplyBox"
+        class="flex items-center justify-center h-2 cursor-row-resize shrink-0"
+        @mousedown.prevent="startResize"
+        @dblclick="resetEditorHeight"
       >
-        <ReplyBox @toggle-editor-size="toggleReplyEditorSize" />
-      </ResizableEditorWrapper>
+        <div class="w-8 h-0.5 rounded-full bg-n-slate-3" />
+      </div>
+      <ReplyBox
+        :pop-out-reply-box="isPopOutReplyBox"
+        @update:pop-out-reply-box="isPopOutReplyBox = $event"
+      />
     </div>
   </div>
 </template>
+
+<style scoped lang="scss">
+.modal-mask {
+  @apply fixed;
+
+  &::v-deep {
+    .ProseMirror-woot-style {
+      @apply max-h-[25rem];
+    }
+
+    .reply-box {
+      @apply border border-n-weak max-w-[75rem] w-[70%];
+
+      &.is-private {
+        @apply dark:border-n-amber-3/30 border-n-amber-12/5;
+      }
+    }
+
+    .reply-box .reply-box__top {
+      @apply relative min-h-[27.5rem];
+    }
+
+    .reply-box__top .input {
+      @apply min-h-[27.5rem];
+    }
+
+    .emoji-dialog {
+      @apply absolute ltr:left-auto rtl:right-auto bottom-1;
+    }
+  }
+}
+
+.has-resized-editor {
+  &::v-deep {
+    .ProseMirror-woot-style {
+      max-height: var(--reply-editor-height) !important;
+      min-height: var(--reply-editor-height) !important;
+    }
+  }
+}
+</style>
