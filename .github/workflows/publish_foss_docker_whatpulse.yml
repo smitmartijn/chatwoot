@@ -49,3 +49,4 @@ jobs:
           file: docker/Dockerfile
           push: true
           tags: lostdomain.azurecr.io/${{ env.DOCKER_TAG }}
+
