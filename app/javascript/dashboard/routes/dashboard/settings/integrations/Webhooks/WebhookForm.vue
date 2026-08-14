@@ -10,6 +10,14 @@ import NextButton from 'dashboard/components-next/button/Button.vue';
 
 const { EXAMPLE_WEBHOOK_URL } = wootConstants;
 
+const httpUrl = value => {
+  try {
+    return ['http:', 'https:'].includes(new URL(value).protocol);
+  } catch {
+    return false;
+  }
+};
+
 const SUPPORTED_WEBHOOK_EVENTS = [
   'conversation_created',
   'conversation_status_changed',
@@ -45,15 +53,17 @@ export default {
   setup() {
     return { v$: useVuelidate() };
   },
-  validations: {
-    url: {
-      required,
-      minLength: minLength(7),
-      url,
-    },
-    subscriptions: {
-      required,
-    },
+  validations() {
+    return {
+      url: {
+        required,
+        minLength: minLength(7),
+        url: window.chatwootConfig?.allowPrivateWebhooks ? httpUrl : url,
+      },
+      subscriptions: {
+        required,
+      },
+    };
   },
   data() {
     const { inboxEventsEnabled } = useConfig();

@@ -40,6 +40,8 @@ class Webhooks::Trigger
 
   def perform_request
     body = @payload.to_json
+    return perform_direct_request(body) if allow_private_webhooks?
+
     SafeFetch.fetch(
       @url,
       method: :post,
@@ -49,6 +51,21 @@ class Webhooks::Trigger
       read_timeout: webhook_timeout,
       validate_content_type: false
     ) { |_response| nil }
+  end
+
+  def perform_direct_request(body)
+    RestClient::Request.execute(
+      method: :post,
+      url: @url,
+      payload: body,
+      headers: request_headers(body),
+      open_timeout: webhook_timeout,
+      read_timeout: webhook_timeout
+    )
+  end
+
+  def allow_private_webhooks?
+    ActiveModel::Type::Boolean.new.cast(ENV.fetch('ALLOW_PRIVATE_WEBHOOKS', false))
   end
 
   def request_headers(body)
@@ -127,6 +144,7 @@ class Webhooks::Trigger
   end
 
   def http_status(error)
+    return error.http_code if error.is_a?(RestClient::ExceptionWithResponse)
     return unless error.is_a?(SafeFetch::HttpError)
 
     error.message.to_s[/\A(\d{3})\b/, 1]&.to_i
