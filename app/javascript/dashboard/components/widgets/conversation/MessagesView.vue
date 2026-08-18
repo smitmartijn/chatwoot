@@ -1,7 +1,7 @@
 <script>
-import { ref, provide, useTemplateRef } from 'vue';
-import { useElementSize } from '@vueuse/core';
+import { ref, provide } from 'vue';
 // composable
+import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { useLabelSuggestions } from 'dashboard/composables/useLabelSuggestions';
 import { useSnakeCase } from 'dashboard/composables/useTransformKeys';
 import { useContactConversationNavigation } from 'dashboard/composables/useContactConversationNavigation';
@@ -13,7 +13,6 @@ import ConversationLabelSuggestion from './conversation/LabelSuggestion.vue';
 import ContactConversationLink from './ContactConversationLink.vue';
 import Banner from 'dashboard/components/ui/Banner.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
-import ResizableEditorWrapper from './ResizableEditorWrapper.vue';
 import ReferralBubble from 'dashboard/components-next/Conversation/ReferralBubble.vue';
 
 // stores and apis
@@ -50,11 +49,11 @@ export default {
     ConversationLabelSuggestion,
     ContactConversationLink,
     Spinner,
-    ResizableEditorWrapper,
     ReferralBubble,
   },
   mixins: [inboxMixin],
   setup() {
+    const isPopOutReplyBox = ref(false);
     const conversationPanelRef = ref(null);
     const replyEditorHeight = ref(null);
 
@@ -122,11 +121,6 @@ export default {
       newerConversation,
       buildConversationPath,
       conversationPanelRef,
-      resizableEditorWrapperRef,
-      messagesViewRef,
-      topBannerRef,
-      containerHeight,
-      topBannerHeight,
     };
   },
   data() {
@@ -317,7 +311,7 @@ export default {
       this.fetchAllAttachmentsFromCurrentChat();
       this.fetchSuggestions();
       this.messageSentSinceOpened = false;
-      this.resetReplyEditorHeight();
+      this.resetEditorHeight();
     },
   },
 
@@ -500,12 +494,6 @@ export default {
       if (!message) return;
       const payload = useSnakeCase(message);
       await this.$store.dispatch('sendMessageWithData', payload);
-    },
-    toggleReplyEditorSize() {
-      this.resizableEditorWrapperRef?.toggleEditorExpand?.();
-    },
-    resetReplyEditorHeight() {
-      this.resizableEditorWrapperRef?.resetEditorHeight?.();
     },
   },
 };
