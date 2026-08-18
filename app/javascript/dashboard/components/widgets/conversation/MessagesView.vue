@@ -1,7 +1,7 @@
 <script>
-import { ref, provide, useTemplateRef } from 'vue';
-import { useElementSize } from '@vueuse/core';
+import { ref, provide } from 'vue';
 // composable
+import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { useLabelSuggestions } from 'dashboard/composables/useLabelSuggestions';
 import { useSnakeCase } from 'dashboard/composables/useTransformKeys';
 
@@ -11,7 +11,6 @@ import MessageList from 'next/message/MessageList.vue';
 import ConversationLabelSuggestion from './conversation/LabelSuggestion.vue';
 import Banner from 'dashboard/components/ui/Banner.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
-import ResizableEditorWrapper from './ResizableEditorWrapper.vue';
 
 // stores and apis
 import { mapGetters } from 'vuex';
@@ -44,10 +43,10 @@ export default {
     Banner,
     ConversationLabelSuggestion,
     Spinner,
-    ResizableEditorWrapper,
   },
   mixins: [inboxMixin],
   setup() {
+    const isPopOutReplyBox = ref(false);
     const conversationPanelRef = ref(null);
     const replyEditorHeight = ref(null);
 
@@ -109,11 +108,6 @@ export default {
       getLabelSuggestions,
       isLabelSuggestionFeatureEnabled,
       conversationPanelRef,
-      resizableEditorWrapperRef,
-      messagesViewRef,
-      topBannerRef,
-      containerHeight,
-      topBannerHeight,
     };
   },
   data() {
@@ -477,12 +471,6 @@ export default {
       if (!message) return;
       const payload = useSnakeCase(message);
       await this.$store.dispatch('sendMessageWithData', payload);
-    },
-    toggleReplyEditorSize() {
-      this.resizableEditorWrapperRef?.toggleEditorExpand?.();
-    },
-    resetReplyEditorHeight() {
-      this.resizableEditorWrapperRef?.resetEditorHeight?.();
     },
   },
 };
