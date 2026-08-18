@@ -1,8 +1,8 @@
-# #
-# # This action will publish Chatwoot CE docker image.
-# # This is set to run against merges to develop, master
-# # and when tags are created.
-# #
+#
+# This action will publish Chatwoot CE docker image.
+# This is set to run against merges to develop, master
+# and when tags are created.
+#
 
 name: Publish Chatwoot CE docker images (whatpulse)
 on:
