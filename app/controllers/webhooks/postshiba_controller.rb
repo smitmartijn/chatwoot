@@ -2,7 +2,8 @@
 class Webhooks::PostshibaController < ActionController::Base # rubocop:disable Rails/ApplicationController
   skip_forgery_protection
   before_action :verify_signature!
-  param_encoding :create, :email, Encoding::ASCII_8BIT
+  # PostShiba includes binary attachmentN form fields alongside the raw MIME email.
+  skip_parameter_encoding :create
 
   def create
     email = params.require(:email)
