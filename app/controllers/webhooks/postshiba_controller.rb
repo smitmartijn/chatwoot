@@ -38,7 +38,10 @@ class Webhooks::PostshibaController < ActionController::Base # rubocop:disable R
     return unless params[:envelope].is_a?(String)
 
     envelope = JSON.parse(params[:envelope])
-    envelope['to'] if envelope.is_a?(Hash)
+    return unless envelope.is_a?(Hash)
+
+    recipients = envelope['rcpt_to'] || envelope['to']
+    recipients.is_a?(String) ? [recipients] : recipients
   end
 
   def valid_recipients?(recipients)
