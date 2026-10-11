@@ -34,7 +34,8 @@ class EmailChannelFinder
   end
 
   def primary_recipient_emails
-    (@email_object.to.to_a + @email_object.cc.to_a + [@email_object['X-Original-To'].try(:value)]).flatten.compact
+    original_recipients = Array.wrap(@email_object['X-Original-To']).map(&:value)
+    (@email_object.to.to_a + @email_object.cc.to_a + original_recipients).flatten.compact
   end
 
   def bcc_recipient_emails
