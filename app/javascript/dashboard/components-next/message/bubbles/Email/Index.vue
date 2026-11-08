@@ -99,6 +99,13 @@ const translationKeySuffix = computed(() => {
   return 'original';
 });
 
+// In dark mode, inline email text colors (e.g. <font color="black">) inherit the
+// bubble color to stay readable, unless the email paints its own background there.
+const LETTER_CLASS_NAME = [
+  'prose prose-bubble !max-w-none letter-render',
+  "dark:[&_:is(font[color],[style*='color']):not([bgcolor],[background],[style*='background'],:is([bgcolor],[background],[style*='background'])_*)]:![color:inherit]",
+].join(' ');
+
 const handleSeeOriginal = () => {
   showingOriginal.value = !showingOriginal.value;
 };
@@ -154,7 +161,7 @@ const handleSeeOriginal = () => {
           <Letter
             v-if="showQuotedMessage"
             :key="`letter-quoted-${translationKeySuffix}`"
-            class-name="prose prose-bubble !max-w-none letter-render"
+            :class-name="LETTER_CLASS_NAME"
             :allowed-css-properties="[
               ...allowedCssProperties,
               'transform',
@@ -166,7 +173,7 @@ const handleSeeOriginal = () => {
           <Letter
             v-else
             :key="`letter-unquoted-${translationKeySuffix}`"
-            class-name="prose prose-bubble !max-w-none letter-render"
+            :class-name="LETTER_CLASS_NAME"
             :html="unquotedHTML"
             :allowed-css-properties="[
               ...allowedCssProperties,
